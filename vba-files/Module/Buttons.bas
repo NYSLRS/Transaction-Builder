@@ -27,6 +27,20 @@ Sub Resetpage()
 End Sub
 
 '/*
+'
+' This macro is called when the "import txt" button is clicked
+'
+'*/
+Sub Import_Txt()
+    ' Create a new Transcode object
+    Dim trans As Transcode
+    Set trans = New Transcode
+    ' Call the "Import" sub in the transcode class
+    ' -- This handles the job for us
+    trans.Import
+End Sub
+
+'/*
 ' Checks if a provided cell has Data Validation rules
 ' -- this is used to find the columns which use values from our Options sheet and make them look pretty
 '*/
