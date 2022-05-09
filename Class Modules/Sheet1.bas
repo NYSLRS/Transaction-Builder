@@ -1,3 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Sheet1"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
 ' Allow sorting of rows when you double click on the header
 ' -- TODO: Allow asc/desc sorting
 Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean)
@@ -19,4 +28,3 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
         Range("A4", Range("H4").End(xlDown)).Sort Key1:=Range(Target.Address), header:=xlYes
     End If
 End Sub
-

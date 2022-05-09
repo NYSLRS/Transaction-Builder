@@ -1,3 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Validation"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '/*
 '
 ' This class is responsible for validating (and formatting) our data
@@ -306,7 +315,7 @@ End Function
 '*/
 Public Function validate_cell(row As Long, column As Integer, row_type As String) As Boolean
   ' Get the value of the cell
-  Dim value As String: value = cells(row, column).value
+  Dim value As String: value = Cells(row, column).value
   ' The result from our validation function (used later). This is either false or a string
   Dim result As Variant
   
@@ -350,7 +359,7 @@ Public Function validate_cell(row As Long, column As Integer, row_type As String
   End If
 
   ' Otherwise... our validation function passed a string back for us to update our value
-  cells(row, column).value = result
+  Cells(row, column).value = result
 
   ' Validation must have passed to get here. Let the function that called this one know.
   validate_cell = True
@@ -384,15 +393,15 @@ Public Function find_duplicate_socials(cell As Range) As Boolean
     ' If the rows are the same, we don't need to compare them
     If cell.row <> row Then
       ' If the SSN for both rows match (and are not empty):
-      ssn = cells(row, ssn_col).value
+      ssn = Cells(row, ssn_col).value
       ' A debug line we don't use right now
       'Debug.Print "SSN: " & cell.value & "/" & ssn
 
       If cell.value <> "" And cell.value = ssn Then
 
         ' Find both employee numbers
-        empnum1 = cells(cell.row, empl_num_col).value
-        empnum2 = cells(row, empl_num_col).value
+        empnum1 = Cells(cell.row, empl_num_col).value
+        empnum2 = Cells(row, empl_num_col).value
 
         ' A debug line we don't use right now
         'Debug.Print "Empnum: " & empnum1 & "/" & empnum2
@@ -441,10 +450,10 @@ Public Function validate_data() As Boolean
     For i = lastRow To startRow Step -1
 
         ' Loop through each column and run our validation code on it
-        For Each col In column_data.Keys
+        For Each col In column_data.keys
             column_name = column_data(col)
             ' Set a reference to the cell we're working with. This may be helpful later. CInt(col) is the Integer representation of the column. i is the row (which is already an integer)
-            Set cell = cells(i, CInt(col))
+            Set cell = Cells(i, CInt(col))
 
             ' Call the validation function with row number (i), column number as an integer (CInt(col)), and the column name (column_data(col))
             If validate_cell(i, CInt(col) + Report.header.column - 1, column_name) = False Then
@@ -491,7 +500,7 @@ End Function
 '
 Public Function find_duplicate_data(row As Long) As Boolean
     ' Get the cell in this row and the "SSN" column
-    Dim cell As Range: Set cell = cells(row, Report.column("SSN"))
+    Dim cell As Range: Set cell = Cells(row, Report.column("SSN"))
 
     ' Find duplicate data
     If find_duplicate_socials(cell) = True Then
@@ -516,7 +525,7 @@ End Function
 '*/
 Public Function find_bad_ssn(row As Long)
   ' Get the cell in this row and the "SSN" column
-  Dim cell As Range: Set cell = cells(row, Report.column("SSN"))
+  Dim cell As Range: Set cell = Cells(row, Report.column("SSN"))
 
   ' If it's 123456789, the website won't take it.
   If cell.value = "123456789" Then

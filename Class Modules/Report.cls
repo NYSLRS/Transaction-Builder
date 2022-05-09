@@ -1,3 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Report"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '
 ' This is a class (a collection of subs and functions) which is responsible for telling us things about the Report sheet, such as whether it
 ' -- has been generated, what row the report starts on, and so on.
@@ -111,7 +120,7 @@ End Property
 '
 Public Function Data(column As Long, row As Long)
     ' Grab the cell at Header + Parameter and set our return value to it
-    Set Data = cells(row + header.row - 1, column + header.column - 1)
+    Set Data = Cells(row + header.row - 1, column + header.column - 1)
 End Function
 
 '
@@ -125,7 +134,7 @@ Public Function column(name As String) As Integer
     ' A variable to hold the key for the entry we're working with. This will change as the program runs.
     Dim key As Variant
     ' Loop through each entry in the column_data dictionary
-    For Each key In dict.Keys
+    For Each key In dict.keys
         ' If the key matches the name we're looking for, success!
         If dict.Item(key) = name Then
             ' Let the function that called this one know that we found a result, and move that result over based on the header position
@@ -236,7 +245,7 @@ Public Function last_row() As Long
     End If
 
     ' Use this approach for now. It finds the last cell in column 7 or 4 (first name) with data, and counts to that.
-    last_row = cells(Rows.count, column).End(xlUp).row
+    last_row = Cells(Rows.count, column).End(xlUp).row
 End Function
 
 '/*
@@ -246,7 +255,7 @@ End Function
 '*/
 Public Function last_column() As Long
     ' Search the Header row from end to start until we find a cell with data. Then return the column there.
-    last_column = cells(header.row, Columns.count).End(xlToLeft).column
+    last_column = Cells(header.row, Columns.count).End(xlToLeft).column
 End Function
 '/*
 '
@@ -255,7 +264,7 @@ End Function
 '*/
 Public Function Header_Range() As Range
     ' A range from the start of the header to the last cell in the header
-    Set Header_Range = Range(header.Address, cells(header.row, last_column))
+    Set Header_Range = Range(header.Address, Cells(header.row, last_column))
 End Function
 
 '/*

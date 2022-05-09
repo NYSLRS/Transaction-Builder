@@ -1,3 +1,12 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+END
+Attribute VB_Name = "Transform"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '
 ' This is a class (a collection of subs and functions) which is responsible for transforming the worksheet from one format into another
 ' -- TODO: save data on create_report click and restore that data on error
@@ -95,7 +104,7 @@ Public Function Duplicate_Rows() As Long
     For i = lastRow To startRow Step -1
         ' Set the transaction type here.
         ' -- TODO: This shouldn't be in this function, but this is the easiest to do right now
-        cells(i, Report.header.column).value = "3"
+        Cells(i, Report.header.column).value = "3"
         
         ' Copy the row contents
         Rows(i).Copy
@@ -104,7 +113,7 @@ Public Function Duplicate_Rows() As Long
         
         ' Modify the new row's transaction type
         ' -- TODO: This shouldn't be in this function, but this is the easiest to do right now
-        cells(i + 1, Report.header.column).value = "4"
+        Cells(i + 1, Report.header.column).value = "4"
         
         ' Keep track of the total of rows we inserted
         count = count + 1
@@ -249,7 +258,7 @@ Public Function redact_socials()
         'Debug.Print "Checking social on " & i&; ":" & Report.Header.column + 5
 
         ' Get the full social from the current row (i) and from column 6 ("social security number")
-        social = cells(i, Report.header.column + 5).value
+        social = Cells(i, Report.header.column + 5).value
         
         ' Find matches within the cell value
         Set Matches = reg.Execute(social)
@@ -273,7 +282,7 @@ Public Function redact_socials()
             ' Set the "Last 4 of social" cell to what we found
             ' -- The cell is the current row (i) and column 4 ("Last 4 of social")
             ' -- TODO: Validate integrity (what does VBA return on failure?)
-                cells(i, Report.header.column + 3).value = m.value
+                Cells(i, Report.header.column + 3).value = m.value
         Next m
         
         ' Keep track of the total of rows we modified
@@ -354,7 +363,7 @@ Public Function shorten_names()
     ' Loop through each row from bottom to top, stopping at "startRow"
     For i = lastRow To startRow Step -1
         ' Get the full first name from the current row (i) and from column 7 ("first name")
-        first_name = cells(i, Report.header.column + 6).value
+        first_name = Cells(i, Report.header.column + 6).value
         
         ' Find matches within the cell value
         Set Matches = reg.Execute(first_name)
@@ -378,7 +387,7 @@ Public Function shorten_names()
             ' Set the "Last 4 of social" cell to what we found
             ' -- The cell is the current row (i) and column 5 ("First 3 of first name")
             ' -- TODO: Validate integrity (what does VBA return on failure?)
-            cells(i, Report.header.column + 4).value = m.value
+            Cells(i, Report.header.column + 4).value = m.value
         Next m
         
         ' Keep track of the total of rows we modified
@@ -475,9 +484,9 @@ Public Sub Resetpage()
     
     ' Put in sample data
     ' TODO Temporary
-    Range(Data(1, 2), Data(5, 2)).value = Array("R10450174", "0", "687485841", "Reanne", "Dulanski")
-    Range(Data(1, 3), Data(5, 3)).value = Array("R10450174", "1", "687485841", "Reanne", "Dulanski")
-    Range(Data(1, 4), Data(5, 4)).value = Array("R10450174", "2", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 2), Data(5, 2)).value = Array("R10450174", "1", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 3), Data(5, 3)).value = Array("R10450174", "2", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 4), Data(5, 4)).value = Array("R10450174", "3", "687485841", "Reanne", "Dulanski")
     Range(Data(1, 5), Data(5, 5)).value = Array("R10450173", "1", "687-48-5852", "John", "Smith")
     Range(Data(1, 6), Data(5, 6)).value = Array("R 10450172", "2", "687 48 5863 ", "Jo-Anne", "Jacobs ")
     Range(Data(1, 7), Data(5, 7)).value = Array("r-10450173", "55", " 687 - 48 - 5852", "Ali' Baba", "Bush Jr 2nd")
