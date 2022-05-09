@@ -181,7 +181,8 @@ Public Function validate_social(value As String) As Variant
   '   ^     - Start of the text
   '   \s*   - Any number of spaces
   '   0*    - Any number of preceeding 0s
-  '   \d{3} - 3 digits
+  '   [0-8] - A number between 0 and 8. SSN's cannot begin with 9.
+  '   \d{2} - 2 digits
   '   -*    - An optional dash which may or may not be there
   '   \d{2} - 2 digits
   '   -*    - An optional dash which may or may not be there
@@ -189,7 +190,7 @@ Public Function validate_social(value As String) As Variant
   '   $     - The end of the text
   '   Parenthesis simply define a group (these will be called "SubMatches" below). They don't impact what gets matched.
   ' So this will match "123-45-6789" as well as "123456789" and " 123 - 45 - 6789 " and various combinations in between
-  reg.Pattern = "^\s*0*\s*(\d{3})\s*-*\s*(\d{2})\s*-*\s*(\d{4})\s*$"
+  reg.Pattern = "^\s*0*\s*([0-8]\d{2})\s*-*\s*(\d{2})\s*-*\s*(\d{4})\s*$"
 
   Dim Matches As Object: Set Matches = reg.Execute(value)
   

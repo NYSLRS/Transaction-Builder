@@ -45,10 +45,14 @@ Public Function error(message As String) As Boolean
     ' The comment we create
     Dim comment As comment
     ' Create a new comment
-    Set comment = cell.AddComment message
-    ' Show it by default
-    comment.Visible = True
-
+    ' Add a comment to the cell this entry refers to
+    With cell_ref.AddComment
+        ' Visible as soon as it is added
+        .Visible = True
+        ' The text of the comment is the message we passed in
+        Text message
+    End With
+    
     ' Add it to our error comment array
     errors.Add comment
 
