@@ -149,20 +149,26 @@ Public Function validate_employee_record(value As String) As Variant
   ' The validation regex pattern to use.
   '   ^       The start of the value
   '   \s*     Any number of spaces (including 0)
-  '   \d      A single number (0-9)
+  '   0*      Any number of beginning zeroes (including none)
+  '   [1-9]   A number between 1 and 9
   '   \d?\d?  Two more optional numbers
   '   \s*     Any number of spaces (including 0)
   '   $       The end of the value
   ' So this will match any number between 0-999
-  reg.Pattern = "^\s*(\d\d?\d?)\s*$"
+  reg.Pattern = "^\s*0*([1-9]\d?\d?)\s*$"
   
+  Dim Matches As Object: Set Matches = reg.Execute(value)
   ' Run the regex to test our value
-  If reg.test(value) = False Then
+  If Matches.count < 1 Then
       ' Let the program that called this one know that we failed validation
       validate_employee_record = False
-  Else
-      ' Let the program that called this one know that we passed validation
-      validate_employee_record = True
+  Else 
+    ' This will store the new (formatted) id
+    Dim format As String
+    ' Set it to each digit we found without the stuff in between
+    format = Matches(0).SubMatches(0)
+    ' Let the program that called this one know the correctly formatted string
+    validate_employee_record = format
   End If
 End Function
 
@@ -251,28 +257,34 @@ Format_Error:
   validate_social = True
 End Function
 
-Public Function validate_first_name(value As String) As Boolean
+Public Function validate_first_name(value As String) As Variant
   ' The validation regex
   Dim reg As RegExp
   Set reg = New RegExp
   ' The validation regex pattern to use.
   '   ^       The start of the value
   '   \s*     Any number of spaces (including 0)
-  '   [^\s\d] A character which is NOT a space or a number (a last name can't begin with a number)
+  '   [^\s\d] A character which is NOT a space or a number (a name can't begin with a number)
   '   .*      Any number of characters (including numbers and spaces) We want this to be as lenient as possible,
   '           --- because names are weird ("Jo Anne", "Jo-Anne", "Al", accents, single quotes, etc)
-  '   \s*     Any number of spaces (including 0)
+  '   \s*     Any number of spaces (including none)
   '   Parenthesis simply define a group (these will be called "SubMatches" below). They don't impact what gets matched.
   ' So this will match "Joanne", "Jo-Anne", "Bob Sr 2nd", "Ali'Baba", and non-latin characters in names (such as those with accents)
   reg.Pattern = "^\s*([^\s\d].*)\s*"
   
+  Dim Matches As Object: Set Matches = reg.Execute(value)
   ' Run the regex to test our value
-  If reg.test(value) = False Then
+  If Matches.count < 1 Then
       ' Let the program that called this one know that we failed validation
       validate_first_name = False
   Else
-      ' Let the program that called this one know that we passed validation
-      validate_first_name = True
+    ' This will store the new (formatted) id
+    Dim format As String
+    ' Set it to what found without the fluff around it
+    ' -- Trimming here because the last \s* isn't greedy enough, and this is faster (in terms of dev) than fixing the regex.
+    format = Trim(Matches(0).SubMatches(0))
+    ' Let the program that called this one know the correctly formatted string
+    validate_first_name = format
   End If
 End Function
 
@@ -281,14 +293,14 @@ End Function
   ' This function validates a last name
   '
   '*/
-Public Function validate_last_name(value As String) As Boolean
+Public Function validate_last_name(value As String) As Variant
   ' The validation regex
   Dim reg As RegExp
   Set reg = New RegExp
   ' The validation regex pattern to use.
   '   ^       The start of the value
   '   \s*     Any number of spaces (including 0)
-  '   [^\s\d] A character which is NOT a space or a number (a last name can't begin with a number)
+  '   [^\s\d] A character which is NOT a space or a number (a name can't begin with a number)
   '   .*      Any number of characters (including numbers and spaces) We want this to be as lenient as possible,
   '           --- because names are weird ("Jo Anne", "Jo-Anne", "Al", accents, single quotes, etc)
   '   \s*     Any number of spaces (including 0)
@@ -296,13 +308,19 @@ Public Function validate_last_name(value As String) As Boolean
   ' So this will match "Joanne", "Jo-Anne", "Bob Sr 2nd", "Ali'Baba", and non-latin characters in names (such as those with accents)
   reg.Pattern = "^\s*([^\s\d].*)\s*"
   
+   Dim Matches As Object: Set Matches = reg.Execute(value)
   ' Run the regex to test our value
-  If reg.test(value) = False Then
+  If Matches.count < 1 Then
       ' Let the program that called this one know that we failed validation
       validate_last_name = False
   Else
-      ' Let the program that called this one know that we passed validation
-      validate_last_name = True
+    ' This will store the new (formatted) id
+    Dim format As String
+    ' Set it to what found without the fluff around it
+    ' -- Trimming here because the last \s* isn't greedy enough, and this is faster (in terms of dev) than fixing the regex.
+    format = Trim(Matches(0).SubMatches(0))
+    ' Let the program that called this one know the correctly formatted string
+    validate_last_name = format
   End If
 End Function
 
