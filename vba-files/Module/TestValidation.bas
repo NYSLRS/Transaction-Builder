@@ -162,7 +162,15 @@ End Sub
 
 '@TestMethod("Validation: First Name")
 Public Sub Validate_First_Name_NonEnglish()
-    Assert.AreEqual Validation.validate_first_name("大"), "大", "Chinese characters failed: 大"
+    Assert.AreEqual Validation.validate_first_name("陳大文"), "陳大文", "Chinese characters failed: 陳大文"
+    Assert.AreEqual Validation.validate_first_name("Aarón"), "Aarón", "Spanish accent failed: Aarón"
+    Assert.AreEqual Validation.validate_first_name("Aarão DiĎբonísio"), "Aarão DiĎբonísio", "Portugese accent failed: Aarão DiĎբonísio"
+    Assert.AreEqual Validation.validate_first_name("Варфоломей"), "Варфоломей", "Russian characters failed: Варфоломей"
+    Assert.AreEqual Validation.validate_first_name("Κωνσταντίνος"), "Κωνσταντίνος", "Greek characters failed: Κωνσταντίνος"
+    Assert.AreEqual Validation.validate_first_name("Кир, Сайрус, Сайрес"), "Кир, Сайрус, Сайрес", "Ukranian characters failed: Кир, Сайрус, Сайрес"
+    Assert.AreEqual Validation.validate_first_name("عباس"), "عباس", "Arabic characters failed: عباس"
+    Assert.AreEqual Validation.validate_first_name("פֵא סוֹפִית,פֵה סוֹפִית"), "פֵא סוֹפִית,פֵה סוֹפִית", "Hebrew characters failed: פֵא סוֹפִית,פֵה סוֹפִית"
+    
 End Sub
 
 '@TestMethod("Validation: First Name")
@@ -173,12 +181,15 @@ End Sub
 '@TestMethod("Validation: First Name")
 Public Sub Validate_First_Name_Short()
     Assert.AreEqual Validation.validate_first_name("Al"), "Al", "Short first name failed: Al"
-    Assert.AreEqual Validation.validate_first_name("B"), "B", "Short first name failed: B"
+    ' Real people have single character first names. "J" (for Jay) is one example.
+    Assert.AreEqual Validation.validate_first_name("J"), "J", "Single character first name failed: J"
 End Sub
 
 '@TestMethod("Validation: First Name")
 Public Sub Validate_First_Name_Long()
-    Assert.AreEqual Validation.validate_first_name("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"), "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz", "Long First name failed"
+    ' This is a real first name of a real person
+    Dim name As String: name = "Adolph Blaine Charles David Earl Frederick Gerald Hubert Irvin John Kenneth Lloyd Martin Nero Oliver Paul Quincy Randolph Sherman Thomas Uncas Victor William Xerxes Yancy Zeus Wolfeschlegelsteinhausenbergerdorffwelchevoralternwarengewissenhaftschaferswessenschafewarenwohlgepflegeundsorgfaltigkeitbeschutzenvonangreifendurchihrraubgierigfeindewelchevoralternzwolftausendjahresvorandieerscheinenvanderersteerdemenschderraumschiffgebrauchlichtalsseinursprungvonkraftgestartseinlangefahrthinzwischensternartigraumaufdersuchenachdiesternwelchegehabtbewohnbarplanetenkreisedrehensichundwohinderneurassevonverstandigmenschlichkeitkonntefortpflanzenundsicherfreuenanlebenslanglichfreudeundruhemitnichteinfurchtvorangreifenvonandererintelligentgeschopfsvonhinzwischensternartigraum"
+    Assert.AreEqual Validation.validate_first_name(name), name, "Long First name failed"
 End Sub
 
 '@TestMethod("Validation: First Name")
@@ -223,7 +234,14 @@ End Sub
 
 '@TestMethod("Validation: Last Name")
 Public Sub validate_last_name_NonEnglish()
-    Assert.AreEqual Validation.validate_last_name("大"), "大", "Chinese characters failed: 大"
+    Assert.AreEqual Validation.validate_last_name("陳大文"), "陳大文", "Chinese characters failed: 陳大文"
+    Assert.AreEqual Validation.validate_last_name("Aarón"), "Aarón", "Spanish accent failed: Aarón"
+    Assert.AreEqual Validation.validate_last_name("Aarão DiĎբonísio"), "Aarão DiĎբonísio", "Portugese accent failed: Aarão DiĎբonísio"
+    Assert.AreEqual Validation.validate_last_name("Варфоломей"), "Варфоломей", "Russian characters failed: Варфоломей"
+    Assert.AreEqual Validation.validate_last_name("Κωνσταντίνος"), "Κωνσταντίνος", "Greek characters failed: Κωνσταντίνος"
+    Assert.AreEqual Validation.validate_last_name("Кир, Сайрус, Сайрес"), "Кир, Сайрус, Сайрес", "Ukranian characters failed: Кир, Сайрус, Сайрес"
+    Assert.AreEqual Validation.validate_last_name("عباس"), "عباس", "Arabic characters failed: عباس"
+    Assert.AreEqual Validation.validate_last_name("פֵא סוֹפִית,פֵה סוֹפִית"), "פֵא סוֹפִית,פֵה סוֹפִית", "Hebrew characters failed: פֵא סוֹפִית,פֵה סוֹפִית"
 End Sub
 
 '@TestMethod("Validation: Last Name")
@@ -363,9 +381,9 @@ End Sub
 
 '@TestMethod("Validation: Employee Record")
 Public Sub validate_employee_record_onlyzero()
-    Assert.IsFalse Validation.validate_employee_record("0"), "Employee record of 0 passed"
-    Assert.IsFalse Validation.validate_employee_record("00"), "Employee record of 00 passed"
-    Assert.IsFalse Validation.validate_employee_record(" 000 "), "Employee record of 000 (with spaces) passed"
+    Assert.AreEqual Validation.validate_employee_record("0"), "0", "Employee record of 0 failed"
+    Assert.AreEqual Validation.validate_employee_record("00"), "0", "Employee record of 00 passed"
+    Assert.AreEqual Validation.validate_employee_record(" 000 "), "0", "Employee record of 000 (with spaces) passed"
 End Sub
 
 '@TestMethod("Validation: Employee Record")

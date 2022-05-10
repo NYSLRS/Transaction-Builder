@@ -150,12 +150,12 @@ Public Function validate_employee_record(value As String) As Variant
   '   ^       The start of the value
   '   \s*     Any number of spaces (including 0)
   '   0*      Any number of beginning zeroes (including none)
-  '   [1-9]   A number between 1 and 9
+  '   \d      A digit (0-9)
   '   \d?\d?  Two more optional numbers
   '   \s*     Any number of spaces (including 0)
   '   $       The end of the value
   ' So this will match any number between 0-999
-  reg.Pattern = "^\s*0*([1-9]\d?\d?)\s*$"
+  reg.Pattern = "^\s*0*(\d\d?\d?)\s*$"
   
   Dim Matches As Object: Set Matches = reg.Execute(value)
   ' Run the regex to test our value
