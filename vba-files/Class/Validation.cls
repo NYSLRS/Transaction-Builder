@@ -162,7 +162,7 @@ Public Function validate_employee_record(value As String) As Variant
   If Matches.count < 1 Then
       ' Let the program that called this one know that we failed validation
       validate_employee_record = False
-  Else 
+  Else
     ' This will store the new (formatted) id
     Dim format As String
     ' Set it to each digit we found without the stuff in between
@@ -179,14 +179,13 @@ End Function
 '   If the ID is valid, it formats it the way we expect it to be and returns a string
 '
 '*/
-Public Function validate_social(value As String) As Variant
+Public Function validate_social(value As String, Optional ByVal row As Long = 0) As Variant
   ' The validation regex
   Dim reg As RegExp
   Set reg = New RegExp
   ' This pattern matches for:
   '   ^     - Start of the text
   '   \s*   - Any number of spaces
-  '   0*    - Any number of preceeding 0s
   '   [0-8] - A number between 0 and 8. SSN's cannot begin with 9.
   '   \d{2} - 2 digits
   '   -*    - An optional dash which may or may not be there
@@ -196,7 +195,7 @@ Public Function validate_social(value As String) As Variant
   '   $     - The end of the text
   '   Parenthesis simply define a group (these will be called "SubMatches" below). They don't impact what gets matched.
   ' So this will match "123-45-6789" as well as "123456789" and " 123 - 45 - 6789 " and various combinations in between
-  reg.Pattern = "^\s*0*\s*([0-8]\d{2})\s*-*\s*(\d{2})\s*-*\s*(\d{4})\s*$"
+  reg.Pattern = "^\s*([0-8]\d{2})\s*-*\s*(\d{2})\s*-*\s*(\d{4})\s*$"
 
   Dim Matches As Object: Set Matches = reg.Execute(value)
   
@@ -225,11 +224,23 @@ Public Function validate_social(value As String) As Variant
       ' Print a message for us. The user doesn't see this.
       Debug.Print "No submatches found in social. This should never happen."
       
-      ' Let the program that called this one know that we passed validation
-      validate_social = True
+      ' Let the program that called this one know that we failed validation
+      validate_social = False
       
       ' We can't continue formatting the social, so end here
       Exit Function
+  End If
+
+  ' Check that each section does not violate the SSA's rules
+  If Matches(0).SubMatches(0) = "000" Or Matches(0).SubMatches(0) = "666" Or Matches(0).SubMatches(1) = "00" Or Matches(0).SubMatches(2) = "0000" Then
+    ' Print a message for us. The user doesn't see this.
+    Debug.Print "SSN contains bad data."
+    
+    ' Let the program that called this one know that we passed validation
+    validate_social = False
+    
+    ' We can't continue formatting the social, so end here
+    Exit Function
   End If
 
   ' This will store the new (formatted) social
@@ -242,6 +253,16 @@ Public Function validate_social(value As String) As Variant
       Debug.Print "Formatted social is not the right number of digits for a SSN: " & value
       GoTo Format_Error
   End If
+
+    ' Find bad SSNs (like 123456789), comparing to this row: i
+  If find_bad_ssn(format, row) = True Then
+      ' No need to let the user know. Our find_bad_ssn function did that
+      ' -- Let the function that called this one know that we failed validation
+      validate_social = False
+      ' No need to run anymore. One error is enough.
+      Exit Function
+  End If
+        
 
   ' Let the program that called this one know that we passed validation
   ' -- and give it the formatted social so it can update the cell
@@ -344,7 +365,7 @@ Public Function validate_cell(row As Long, column As Integer, row_type As String
   Select Case row_type
     ' Social Security Number
     Case "social", "ssn", "SSN"
-      result = validate_social(value)
+      result = validate_social(value, row)
     ' NYSLRS ID
     Case "id", "nyslrsid", "nyslrs_id", "NYSLRS ID"
       result = validate_id(value)
@@ -496,15 +517,6 @@ Public Function validate_data() As Boolean
             Exit Function
         End If
 
-        ' Find bad SSNs (like 123456789), comparing to this row: i
-        If find_bad_ssn(i) = True Then
-            ' No need to let the user know. Our find_duplicate_socials function did that
-            ' -- Let the function that called this one know that we failed validation
-            validate_data = False
-            ' No need to run anymore. One error is enough.
-            Exit Function
-        End If
-        
     ' Move on to the next row
     Next i
         
@@ -542,29 +554,30 @@ End Function
 ' -- for instance, "123456789"
 '
 '*/
-Public Function find_bad_ssn(row As Long)
-  ' Get the cell in this row and the "SSN" column
-  Dim cell As Range: Set cell = Cells(row, Report.column("SSN"))
+Public Function find_bad_ssn( value As String, row As Long )
 
   ' If it's 123456789, the website won't take it.
-  If cell.value = "123456789" Then
+  If value = "123456789" Then
     Dim result As Integer
     ' Let the user know
-    result = MsgBox("It looks like you used dummy data for row " & cell.row & ". Unfortunately, the website will not accept this number. Do you want me to create a sample SSN for you?", vbYesNo + vbQuestion)
+    If training_mode = True Then
+      result = MsgBox("It looks like you used dummy data for row " & row & ". Unfortunately, the website will not accept this number. Do you want me to create a sample SSN for you?", vbYesNo + vbQuestion)
+    Else
+      MsgBox "You entered a bad SSN on row " & row & "."
+      result = vbNo
+    End If
 
     ' If they asked for a sample social, create one for them
     If result = vbYes Then
       ' The sample we'll create
       Dim sample As String
       ' This is a hacky solution, but it works for now.
-      ' -- Prefix the social by a "9" so we avoid 1234... nonsense. Real socials cannot begin with a 9, but the website accepts them
+      ' -- Prefix the social by a "676" so we avoid 1234... nonsense. And 676 codes were never issued, so this avoids collisions
       ' -- then use the row number to avoid collisions with other sample socials.
-      ' -- -- Right("789" & cell.row, 4) prefixes the row number by 789 to make sure it is at least 4 characters long, then takes the right-most 4 digits
-      ' -- Then add the row number to the end (prefixed by zeroes) to ensure no collisions
-      sample = "9" & Right("789" & cell.row, 4) & Right("000" & cell.row, 4)
+      sample = "676" & Right("999999" & row, 6)
 
       ' Set the cell to this value we created
-      cell.value = sample
+      value = sample
 
       ' Now the SSN is valid. So we succeeded
       find_bad_ssn = False
@@ -578,6 +591,24 @@ Public Function find_bad_ssn(row As Long)
     ' Exit here before our success logic below
     Exit Function
   End If
+
+  ' Define any SSNs we know are bad. These are SSNs that the Social Security Administration does not issue anymore,
+  ' -- usually because they were famously used in advertising
+  Dim bad_ssns() As Variant: bad_ssns() = Array("078051120", "457555462", "111111111", "219099999")
+  ' The SSN variable we will use later. This will change as the program continues
+  Dim ssn As Variant
+  ' Go over each SSN in our list above
+  For Each ssn In bad_ssns
+    ' If the cell has this SSN, issue a message
+    If value = ssn Then
+      ' Tell the user what happened
+        MsgBox "The SSN on row " & row & " is known to be a bad SSN that the Social Security Administration does not issue."
+        ' Let the function calling this one know that we failed
+        find_bad_ssn = true
+        ' No need to continue. We failed
+        Exit Function
+    End If
+  Next ssn
 
   ' If we got here, then we didn't find an error. Let the function that called this one know.
   find_bad_ssn = False

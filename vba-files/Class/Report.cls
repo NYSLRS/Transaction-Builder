@@ -20,6 +20,9 @@ Private Header_Start_Cell As Range
 ' A reference to the Transform object we're using. See Transform.cls to see what this object does.
 Private transform_instance As Transform
 
+' TODO
+Private sheet As Worksheet
+
 '
 ' We use this to access the header.
 '
@@ -60,6 +63,10 @@ End Property
 '
 Private Sub class_initialize()
     ' Empty for now. We just create this as a template if we need to use it later.
+
+    ' Initialize it to the active sheet until told otherwise
+    ' TODO
+    Set sheet = Application.ActiveSheet
 End Sub
 
 ' Run initialization code with parameters. For some reason, VBA doesn't allow you to pass parameters to class_initialize... so we have to do it this way
@@ -69,6 +76,16 @@ Public Sub Init(Transform As Transform)
 
     ' Find the header and store it for later
     find_header
+End Sub
+
+'/*
+'
+' Switch the sheet we're working with. This is usually done only once during init
+'
+'*/
+Public Sub SwitchSheet( worksheet As Worksheet ) 
+    ' Update the sheet variable
+    sheet = worksheet
 End Sub
 
 '
@@ -120,7 +137,7 @@ End Property
 '
 Public Function Data(column As Long, row As Long)
     ' Grab the cell at Header + Parameter and set our return value to it
-    Set Data = Cells(row + header.row - 1, column + header.column - 1)
+    Set Data = sheet.Cells(row + header.row - 1, column + header.column - 1)
 End Function
 
 '
@@ -156,11 +173,11 @@ Public Function find_header(Optional recreated As Boolean = False) As Range
     Dim cell As Range
 
     ' Search for NYSLRS ID in the first 50 rows of the first A-M columns
-    Set cell = Range("A1:M50").Find("Transaction")
+    Set cell = sheet.Range("A1:M50").Find("Transaction")
     ' If we didn't find it, try something else
     If (cell Is Nothing) Then
         ' Try searching for "Transaction" instead
-        Set cell = Range("A1:M50").Find("NYSLRS ID")
+        Set cell = sheet.Range("A1:M50").Find("NYSLRS ID")
         ' We didn't find that either! There's a problem.
         If (cell Is Nothing) Then
             ' Unable to find a header!
@@ -211,11 +228,11 @@ Public Function Has_Header() As Boolean
     Dim cell As Range
 
     ' Search for NYSLRS ID in the first 50 rows of the first A-M columns
-    Set cell = Range("A1:M50").Find("Transaction")
+    Set cell = sheet.Range("A1:M50").Find("Transaction")
     ' If we didn't find it, try something else
     If (cell Is Nothing) Then
         ' Try searching for "Transaction" instead
-        Set cell = Range("A1:M50").Find("NYSLRS ID")
+        Set cell = sheet.Range("A1:M50").Find("NYSLRS ID")
         ' We didn't find that either! There's a problem.
         If (cell Is Nothing) Then
             Has_Header = False
@@ -245,7 +262,7 @@ Public Function last_row() As Long
     End If
 
     ' Use this approach for now. It finds the last cell in column 7 or 4 (first name) with data, and counts to that.
-    last_row = Cells(Rows.count, column).End(xlUp).row
+    last_row = sheet.Cells(Rows.count, column).End(xlUp).row
 End Function
 
 '/*
@@ -255,7 +272,7 @@ End Function
 '*/
 Public Function last_column() As Long
     ' Search the Header row from end to start until we find a cell with data. Then return the column there.
-    last_column = Cells(header.row, Columns.count).End(xlToLeft).column
+    last_column = sheet.Cells(header.row, Columns.count).End(xlToLeft).column
 End Function
 '/*
 '
@@ -264,7 +281,7 @@ End Function
 '*/
 Public Function Header_Range() As Range
     ' A range from the start of the header to the last cell in the header
-    Set Header_Range = Range(header.Address, Cells(header.row, last_column))
+    Set Header_Range = sheet.Range(header.Address, Cells(header.row, last_column))
 End Function
 
 '/*
@@ -274,7 +291,7 @@ End Function
 '*/
 Public Function Full_Range() As Range
     ' Get the range from the header (1,1) to the last column and last row (8,last_row())
-    Set Full_Range = Range(Data(1, 1), Data(last_column(), last_row()))
+    Set Full_Range = sheet.Range(Data(1, 1), Data(last_column(), last_row()))
 End Function
 
 '

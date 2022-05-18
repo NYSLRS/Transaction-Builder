@@ -1,0 +1,11 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui">
+	<ribbon startFromScratch="false">
+		<tabs>
+			<tab id="instructorTab" label="ERTT">
+				<group id="instructorGroup" label="Learning">
+					<button id="instructorMode" label="Instructor Mode" imageMso="HappyFace" size="large" onAction="Instructor_Mode" />
+				</group>
+			</tab>
+		</tabs>
+	</ribbon>
+</customUI>

@@ -7,3 +7,20 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
+
+Private Sub Workbook_Open()
+  Debug.Print "Workbook opened"
+  ' Turn off training mode
+  training_mode = False
+End Sub
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+  Debug.Print "Workbook closing"
+  ' Turn off training mode
+  training_mode = False
+End Sub
+
+Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
+  Debug.Print "Saving workbook"
+End Sub
+

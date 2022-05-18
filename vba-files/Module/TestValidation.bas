@@ -1,7 +1,7 @@
+Attribute VB_Name = "TestValidation"
 '@TestModule("Validation")
 '@Folder("Tests.Validation")
 '@ModuleDescription "Tests the Validation.cls class"
-Attribute VB_Name = "TestValidation"
 
 Option Explicit
 Option Private Module
@@ -42,47 +42,86 @@ End Sub
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Passing_SSN()
     ' Success: normal SSN
+    Fakes.MsgBox.Returns vbYes
     Assert.IsTrue Validation.validate_social("155505549"), "Basic SSN failed: 155505549"
 End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Passing_SSN_With_Dashes()
     ' Success: normal SSN with dashes
+    Fakes.MsgBox.Returns vbYes
     Assert.IsTrue Validation.validate_social("155-50-5549"), "SSN with dashes failed: 155-50-5549"
 End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Passing_SSN_With_Spaces()
     ' Success: normal SSN with dashes and spaces
+    Fakes.MsgBox.Returns vbYes
     Assert.IsTrue Validation.validate_social(" 155 - 50 - 5549 "), "SSN With dashes and spaces failed:  155 - 50 - 5549 "
     Assert.IsTrue Validation.validate_social("155 50 5549"), "SSN with spaces failed: 155 50 5549"
 End Sub
 
 '@TestMethod("Validation: SSN")
-Public Sub Validate_Passing_Dummy_SSN()
+Public Sub Validate_Failing_Dummy_SSN()
+    Fakes.MsgBox.Returns vbYes
     ' Success: normal SSN the website doesn't accept
-    Assert.IsTrue Validation.validate_social("123-45-6789"), "Dummy SSN failed: 123-45-6789"
-    Assert.IsTrue Validation.validate_social("123456789"), "Dummy SSN failed: 123456789"
+    Assert.IsFalse Validation.validate_social("123-45-6789"), "Dummy SSN failed: 123-45-6789"
+    Assert.IsFalse Validation.validate_social("123456789"), "Dummy SSN failed: 123456789"
 End Sub
 
 '@TestMethod("Validation: SSN")
-Public Sub Validate_Passing_SSN_Zero_Prefix()
+Public Sub Validate_Failing_SSN_Zero_Prefix()
+    Fakes.MsgBox.Returns vbYes
     ' Success: normal SSN prefixed by zeroes
-    Assert.IsTrue Validation.validate_social("0123456789"), "0-prefix failed: 0123456789"
-    Assert.IsTrue Validation.validate_social("00123456789"), "00-prefix failed: 00123456789"
-    Assert.IsTrue Validation.validate_social("000123456789"), "000-prefix failed: 000123456789"
-    Assert.IsTrue Validation.validate_social("0000123456789"), "0000-prefix failed: 0000123456789"
+    Assert.IsFalse Validation.validate_social("0123456789"), "0-prefix failed: 0123456789"
+    Assert.IsFalse Validation.validate_social("00123456789"), "00-prefix failed: 00123456789"
+    Assert.IsFalse Validation.validate_social("000123456789"), "000-prefix failed: 000123456789"
+    Assert.IsFalse Validation.validate_social("0000123456789"), "0000-prefix failed: 0000123456789"
 End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Failing_SSN_With_Nine()
+    Fakes.MsgBox.Returns vbYes
     ' Failure: Invalid ssn begins with 9
     Assert.IsFalse Validation.validate_social("900-50-5549"), "9-prefix SSN passed: 900-50-5549"
     Assert.IsFalse Validation.validate_social("923456789"), "9-prefix SSN passed: 923456789"
 End Sub
 
 '@TestMethod("Validation: SSN")
+Public Sub Validate_Failing_SSN_With_Zero()
+    Fakes.MsgBox.Returns vbYes
+    ' Failure: Invalid ssn begins with 000
+    Assert.IsFalse Validation.validate_social("000-50-5549"), "000-prefix SSN passed: 000-50-5549"
+    Assert.IsFalse Validation.validate_social("000456789"), "000-prefix SSN passed: 000456789"
+End Sub
+
+'@TestMethod("Validation: SSN")
+Public Sub Validate_Failing_SSN_With_Six()
+    Fakes.MsgBox.Returns vbYes
+    ' Failure: Invalid ssn begins with 666
+    Assert.IsFalse Validation.validate_social("666-50-5549"), "666-prefix SSN passed: 666-50-5549"
+    Assert.IsFalse Validation.validate_social("666456789"), "666-prefix SSN passed: 666456789"
+End Sub
+
+'@TestMethod("Validation: SSN")
+Public Sub Validate_Failing_SSN_With_Middle_Zero()
+    Fakes.MsgBox.Returns vbYes
+    ' Failure: Invalid ssn with middle -00-
+    Assert.IsFalse Validation.validate_social("101-00-5549"), "SSN with -00- passed: 101-00-5549"
+    Assert.IsFalse Validation.validate_social("101006789"), "SSN with -00- passed: 101006789"
+End Sub
+
+'@TestMethod("Validation: SSN")
+Public Sub Validate_Failing_SSN_With_End_Zero()
+    Fakes.MsgBox.Returns vbYes
+    ' Failure: Invalid ssn ending with 0000
+    Assert.IsFalse Validation.validate_social("101-55-0000"), "SSN ending with 0000 passed: 101-55-0000"
+    Assert.IsFalse Validation.validate_social("101550000"), "SSN ending with 0000 passed: 101550000"
+End Sub
+
+'@TestMethod("Validation: SSN")
 Public Sub Validate_Failing_SSN_Too_Many()
+    Fakes.MsgBox.Returns vbYes
     ' Failure: too many characters
     Assert.IsFalse Validation.validate_social("1555055499"), "SSN too big passed: 1555055499"
     Assert.IsFalse Validation.validate_social("155-50-554910"), "SSN too big (w/ dashes) passed: 155-50-554910"
@@ -90,6 +129,7 @@ End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Failing_SSN_Too_Few()
+    Fakes.MsgBox.Returns vbYes
     ' Failure: too few characters
     Assert.IsFalse Validation.validate_social("155-50-554"), "SSN too small passed: 155-50-554"
     Assert.IsFalse Validation.validate_social("155-50-55"), "SSN too small passed: 155-50-55"
@@ -106,6 +146,7 @@ End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Failing_SSN_Too_Few_With_Dashes()
+    Fakes.MsgBox.Returns vbYes
     ' Failure: Exactly 9 characters but not 9 digits
     Assert.IsFalse Validation.validate_social("155-50-55"), "SSN too small (with dashes) passed: 155-50-55"
     Assert.IsFalse Validation.validate_social("155 50 55"), "SSN too small (with spaces) passed: 155 50 55"
@@ -114,6 +155,7 @@ End Sub
 
 '@TestMethod("Validation: SSN")
 Public Sub Validate_Failing_SSN_NonDigits()
+    Fakes.MsgBox.Returns vbYes
     ' Failure: Non-digits present
     Assert.IsFalse Validation.validate_social("abc-de-fghi"), "SSN with letters passed: abc-de-fghi"
     Assert.IsFalse Validation.validate_social("abcdefghi"), "SSN with letters passed: abcdefghi"
@@ -137,10 +179,20 @@ Public Sub Validate_Failing_SSN_NonDigits()
     Assert.IsFalse Validation.validate_social("123-45678}")
 End Sub
 
+    
+'@TestMethod("Validation: SSN")
+Public Sub Validate_Failing_SSN_Famous_Numbers()
+    Fakes.MsgBox.Returns vbYes
+    Assert.IsFalse Validation.validate_social("078051120"), "SSN is a famous SSN which cannot be issued: 078051120" 
+    Assert.IsFalse Validation.validate_social("457555462"), "SSN is a famous SSN which cannot be issued: 457555462" 
+    Assert.IsFalse Validation.validate_social("111111111"), "SSN is a famous SSN which cannot be issued: 111111111" 
+    Assert.IsFalse Validation.validate_social("219099999"), "SSN is a famous SSN which cannot be issued: 219099999"
+End Sub
+
 '@TestMethod("Validation: First Name")
 Public Sub Validate_Good_First_Name()
     Assert.AreEqual Validation.validate_first_name("John"), "John", "Normal first name failed: John"
-End Sub
+End Sub    
 
 '@TestMethod("Validation: First Name")
 Public Sub Validate_Good_First_Name_Dashes()
@@ -382,8 +434,8 @@ End Sub
 '@TestMethod("Validation: Employee Record")
 Public Sub validate_employee_record_onlyzero()
     Assert.AreEqual Validation.validate_employee_record("0"), "0", "Employee record of 0 failed"
-    Assert.AreEqual Validation.validate_employee_record("00"), "0", "Employee record of 00 passed"
-    Assert.AreEqual Validation.validate_employee_record(" 000 "), "0", "Employee record of 000 (with spaces) passed"
+    Assert.AreEqual Validation.validate_employee_record("00"), "0", "Employee record of 00 failed"
+    Assert.AreEqual Validation.validate_employee_record(" 000 "), "0", "Employee record of 000 (with spaces) failed"
 End Sub
 
 '@TestMethod("Validation: Employee Record")
