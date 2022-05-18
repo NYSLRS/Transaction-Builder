@@ -42,13 +42,12 @@ Private Sub class_initialize()
   
     ' Create a new report object and store it in our Report property (which represents the variable sheet_report)
     Set sheet_report = New Report
-    ' Initialize the report with a refernce to this object
-    Report.Init Me
 End Sub
 
 ' Run initialization code with parameters. For some reason, VBA doesn't allow you to pass parameters to class_initialize... so we have to do it this way
-Public Sub Init()
-  ' Empty for now. We just create this as a template if we need to use it later.
+Public Sub Init( Optional sheet As Worksheet = Nothing )
+    ' Initialize the report with a refernce to this object
+    Report.Init Me, sheet
 End Sub
 
 '
@@ -73,9 +72,9 @@ End Sub
 ' This function gets a cell BELOW the header. We outsource this work to the Report class, but we define it here just to make references
 ' -- to it shorter. For example: Data(1,1) instead of Report.Data(1,1)
 '
-' -- For example, if our header begins at B2, then:
-' -- Data(1,1) would return Range(B3)
-' -- Data(3,3) would return Range(D4)
+' -- For example, if our header begins at A1, then:
+' -- Data(1,1) would return Range(A2)
+' -- Data(3,3) would return Range(C4)
 '
 Public Function Data(column As Long, row As Long) As Range
         ' Let our report object handle this logic for us
@@ -136,6 +135,9 @@ End Function
 ' -- TODO: we have this in a sub because eventually we will copy these records from a template page, so it is easier for a non-programmer to change. But we aren't doing that now.
 '
 Private Sub Report_Headers()
+    ' Define a special error handler here to skip adding comments if we encounter an error while doing so
+    ' On Error GoTo header_error
+
     ' Print a debug message for us (user doesn't see this)
     ' -- Ctrl+G in the code viewer will show these messages
     Debug.Print "Switching to Report Headers"
@@ -153,9 +155,22 @@ Private Sub Report_Headers()
     Columns(startColumn + 3).Insert xlShiftToRight, xlFormatFromRightOrBelow
     Columns(startColumn + 3).Insert xlShiftToRight, xlFormatFromRightOrBelow
     
+    ' Figure out what the headers SHOULD be
+    Dim column_data: Set column_data = Report.column_data("Report")
+    ' If we didn't get many columns, there's a problem!
+    If column_data.count < 3 Then 
+        ' Print a message for us. The user doesn't see this.
+        Debug.Print "Error getting report column data. Columns found: " & column_data.count
+        ' Print a message for the user
+        MsgBox "Internal error setting up report sheet."
+        ' Don't do anything else here... just bail out of this function. The function calling this will (probably) also fail!
+        Exit Sub
+    End If
+
     ' Set the headers for each row
     ' -- This Range is equivalent to Range("B4:I4")
-    Range(Data(0, 1), Data(7, 1)).value = Array("Transaction", "NYSLRS ID", "Empl Rcd", "Last 4 of social", "First 3 of first name", "Social Security Number", "First Name", "Last Name")
+    ' -- This will return something like: Array("Transaction", "NYSLRS ID", "Empl Rcd", "Last 4 of social", "First 3 of first name", "Social Security Number", "First Name", "Last Name")
+    Range(Data(0, 0), Data(7, 0)).value = column_data.items 
 
     ' Reset the header data in our Report class
     Report.find_header
@@ -164,11 +179,11 @@ Private Sub Report_Headers()
     On Error GoTo error_handler
 
     ' Add a few comments to explain our data
-    With Data(1, 1).AddComment
+    With Data(1, 0).AddComment
         .Visible = False
         .Text "Transaction type. Each employee needs at least one type 3 and one type 4 line."
     End With
-    With Data(3, 1).AddComment
+    With Data(3, 0).AddComment
         .Visible = False
         .Text "Employee Record. This is 0 unless the employee has had another job in the retirement system."
     End With
@@ -176,11 +191,18 @@ Private Sub Report_Headers()
     ' Exit before our error handler code. If we don't do this, our error handler code will run even on non-errors
     Exit Sub
 
+header_error:
+    ' Print a message for us. The user doesn't see this
+    Debug.Print "Error setting headers: #" & Err.Number & " at " & Err.Source & ". " & Err.Description & " Context: " & Err.HelpContext
+
+    ' Exit before we run the code below
+    Exit Sub
+
     ' Our error handler
 error_handler:
-        ' Let us know there was a problem
-        Debug.Print "Error adding comment. This usually happens because a previous comment wasn't cleared: #" & Err.Number & " " & Err.Description
-
+    ' Let us know there was a problem
+    Debug.Print "Error adding comment. This usually happens because a previous comment wasn't cleared: #" & Err.Number & " " & Err.Description
+        
 End Sub
 
 '
@@ -191,9 +213,23 @@ Private Sub Initial_Headers()
     ' Print a debug message for us (user doesn't see this)
     ' -- Ctrl+G in the code viewer will show these messages
     Debug.Print "Switching back to our initial headers."
-    
+
+    ' Figure out what the headers SHOULD be
+    Dim column_data: Set column_data = Report.column_data("Initial")
+    ' If we didn't get many columns, there's a problem!
+    If column_data.count < 3 Then 
+        ' Print a message for us. The user doesn't see this.
+        Debug.Print "Error getting initial column data. Columns found: " & column_data.count
+        ' Print a message for the user
+        MsgBox "Internal error setting up initial sheet."
+        ' Don't do anything else here... just bail out of this function. The function calling this will (probably) also fail!
+        Exit Sub
+    End If 
+
+    ' Set the range of cells to the column data we found above (as an array)
     ' -- This Range is equivalent to Range("B4:I4")
-    Range(Data(1, 1), Data(8, 1)).value = Array("NYSLRS ID", "Empl Rcd", "Social Security Number", "First Name", "Last Name", "", "", "")
+    ' -- This will find something like this: Array("NYSLRS ID", "Empl Rcd", "Social Security Number", "First Name", "Last Name", "", "", "")
+    Range(Data(1, 0), Data(5, 0)).value = column_data.items 
 
     ' Reset the header data in our Report class
     Report.find_header
@@ -202,7 +238,7 @@ Private Sub Initial_Headers()
     On Error GoTo error_handler
 
     ' Add a few comments to explain our data
-    With Data(2, 1).AddComment
+    With Data(2, 0).AddComment
         .Visible = False
         .Text "Employee Record. This is 0 unless the employee has had another job in the retirement system."
     End With
@@ -427,7 +463,7 @@ Public Sub Sort_Report()
         ' Sort by "Employee ID" 0-9
         .SortFields.Add key:=Columns(Report.header.column + 2), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
         ' Set the range to the header row to end, the header column start to finish
-        .SetRange Range(Report.header, Data(8, 1).End(xlDown))
+        .SetRange Range(Report.header, Data(8, 0).End(xlDown))
         ' The first row (A4:H4) is a header
         .header = xlYes
         ' Set orientation (probably unnecessary)
@@ -484,12 +520,12 @@ Public Sub Resetpage()
     
     ' Put in sample data
     ' TODO Temporary
-    Range(Data(1, 2), Data(5, 2)).value = Array("R10450174", "1", "687485841", "Reanne", "Dulanski")
-    Range(Data(1, 3), Data(5, 3)).value = Array("R10450174", "2", "687485841", "Reanne", "Dulanski")
-    Range(Data(1, 4), Data(5, 4)).value = Array("R10450174", "3", "687485841", "Reanne", "Dulanski")
-    Range(Data(1, 5), Data(5, 5)).value = Array("R10450173", "1", "687-48-5852", "John", "Smith")
-    Range(Data(1, 6), Data(5, 6)).value = Array("R 10450172", "2", "687 48 5863 ", "Jo-Anne", "Jacobs ")
-    Range(Data(1, 7), Data(5, 7)).value = Array("r-10450173", "55", " 687 - 48 - 5852", "Ali' Baba", "Bush Jr 2nd")
+    Range(Data(1, 1), Data(5, 1)).value = Array("R10450174", "1", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 2), Data(5, 2)).value = Array("R10450174", "2", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 3), Data(5, 3)).value = Array("R10450174", "3", "687485841", "Reanne", "Dulanski")
+    Range(Data(1, 4), Data(5, 4)).value = Array("R10450173", "1", "687-48-5852", "John", "Smith")
+    Range(Data(1, 5), Data(5, 5)).value = Array("R 10450172", "2", "687 48 5863 ", "Jo-Anne", "Jacobs ")
+    Range(Data(1, 6), Data(5, 6)).value = Array("r-10450173", "55", " 687 - 48 - 5852", "Ali' Baba", "Bush Jr 2nd")
 End Sub
 
 '/*
@@ -502,16 +538,33 @@ End Sub
 ' TODO: Set up borders/backgrounds/etc
 '
 '*/
-Public Function Recreate_Page() As Boolean
+Public Function Recreate_Page(Optional sheet As Worksheet = Nothing) As Boolean
     ' Print a message for us. The user doesn't see this.
     Debug.Print "Recreating the page."
 
+    If sheet Is Nothing Then
+        Set sheet = report.sheet
+    End If
+
     ' Clear all data in every cell
     ' -- todo: use End() like a civilized person
-    Range("B6:ZZ999999").value = ""
+    sheet.Range("B6:ZZ999999").value = ""
+
+    ' Figure out what the headers SHOULD be
+    Dim column_data: Set column_data = Report.column_data("Initial")
+    ' If we didn't get many columns, there's a problem!
+    If column_data.count < 3 Then 
+        ' Print a message for us. The user doesn't see this.
+        Debug.Print "Error getting ininital column data during recreation. Columns found: " & column_data.count
+        ' Print a message for the user
+        MsgBox "Internal error setting up initial sheet."
+        ' Don't do anything else here... just bail out of this function. The function calling this will (probably) also fail!
+        Exit Sub
+    End If
 
     ' Set new headers where they are supposed to be as of this writing
-    Range("B6:F6").value = Array("NYSLRS ID", "Empl Rcd", "Social Security Number", "First Name", "Last Name")
+    ' -- This will return something like: Array("NYSLRS ID", "Empl Rcd", "Social Security Number", "First Name", "Last Name")
+    sheet.Range("B6:F6").value = column_data.items 
 
 End Function
 

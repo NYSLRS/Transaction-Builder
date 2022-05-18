@@ -5,8 +5,9 @@ Attribute VB_Name = "Buttons"
 '*/
 Sub Create_Report()
     ' Create a new Transform object
-    Dim trans As Transform
-    Set trans = New Transform
+    Dim trans As Transform: Set trans = New Transform
+    ' Initialize the transform object
+    trans.Init
     ' Call the "Create_Report" sub in the transform class
     ' -- This handles the job for us
     trans.Create_Report
@@ -19,8 +20,9 @@ End Sub
 '*/
 Sub Resetpage()
     ' Create a new Transform object
-    Dim trans As Transform
-    Set trans = New Transform
+    Dim trans As Transform: Set trans = New Transform
+    ' Initialize the transform object
+    trans.Init
     ' Call the "Resetpage" sub in the transform class
     ' -- This handles the job for us
     trans.Resetpage

@@ -21,7 +21,7 @@ Private Header_Start_Cell As Range
 Private transform_instance As Transform
 
 ' TODO
-Private sheet As Worksheet
+Public sheet As Worksheet
 
 '
 ' We use this to access the header.
@@ -70,9 +70,15 @@ Private Sub class_initialize()
 End Sub
 
 ' Run initialization code with parameters. For some reason, VBA doesn't allow you to pass parameters to class_initialize... so we have to do it this way
-Public Sub Init(Transform As Transform)
+Public Sub Init(Transform As Transform, Optional ws As Worksheet = Nothing )
     ' Set the transform object to what we passed in
     Me.Transform = Transform
+
+    ' If we provided a worksheet, then switch to it
+    If Not ws Is Nothing Then
+        ' Call our switchsheet function on the worksheet provided
+        SwitchSheet ws
+    End If
 
     ' Find the header and store it for later
     find_header
@@ -83,29 +89,42 @@ End Sub
 ' Switch the sheet we're working with. This is usually done only once during init
 '
 '*/
-Public Sub SwitchSheet( worksheet As Worksheet ) 
+Public Sub SwitchSheet( ws As Worksheet ) 
     ' Update the sheet variable
-    sheet = worksheet
+    Set sheet = ws
+    ' Print a message for us (the user doesn't see this)
+    Debug.Print "Switching report sheet: " & ws.Name
 End Sub
 
 '
 ' This function determines what header columns we have and what they should be called.
 ' -- if we change the sheet, we need to update the columns here.
 '
-Public Function column_data() As Scripting.Dictionary
+Public Function column_data( Optional ByVal mode As String = "Current" ) As Scripting.Dictionary
     ' This stores a reference to each of our columns and the data it contains
     ' -- TODO: This should be handled when we initialize our Report object
     Dim Data As Scripting.Dictionary
     Set Data = New Scripting.Dictionary
 
+    ' If we didn't pass a mode, then determine the current report mode
+    If mode = "Current" Then
+        ' If we're in the initial state, then set the mode to initial
+        If isInitial Then
+            mode = "Initial"
+        Else
+            ' Otherwise, set the mode to the report state
+            mode = "Report"
+        End If
+    End If
+
     ' This is sloppy, but it works for right now. We hardcode these references to the column names and return those
-    If isInitial = True Then
+    If mode = "Initial" Then
         Data.Add 1, "NYSLRS ID"
         Data.Add 2, "Employee Record"
         Data.Add 3, "SSN"
         Data.Add 4, "First Name"
         Data.Add 5, "Last Name"
-    Else
+    ElseIf mode = "Report" Then
         Data.Add 1, "Transaction"
         Data.Add 2, "NYSLRS ID"
         Data.Add 3, "Employee Record"
@@ -114,6 +133,13 @@ Public Function column_data() As Scripting.Dictionary
         Data.Add 6, "SSN"
         Data.Add 7, "First Name"
         Data.Add 8, "Last Name"
+    Else
+        ' Print a message for us. The user doesn't see this
+        Debug.Print "column_data bad mode: " & mode
+        ' Print a message for the user
+        MsgBox "Internal error encountered determining column data"
+        ' Raise an error so we don't continue doing anything
+        Err.Raise vbObjectError + 513, "Report.column_data bad mode: " & mode
     End If
 
     ' Let the function that called this one know what we determined
@@ -131,13 +157,65 @@ End Property
 
 '
 ' This function gets a cell BELOW the header.
-' -- For example, if our header begins at B2, then:
-' -- Data(1,1) would return Range(B3)
-' -- Data(3,3) would return Range(D4)
+' -- For example, if our header begins at A1, then:
+' -- Data(1,1) would return Range(A2)
+' -- Data(3,3) would return Range(C3)
 '
-Public Function Data(column As Long, row As Long)
+Public Function Data(column As Long, row As Long) As Range
+    ' Column and row must be positive. Column starts at 1, row can technically go to 0 to refer to the header
+    If column < 1 Or row < 0 Then
+        ' Throw an error so we don't continue doing anything and can fix this problem.
+        Err.Raise Number:=vbObjectError + 513, Description:="Report.Data passed a bad column(" & column & ") or row(" & row & ")"
+    End If
+
     ' Grab the cell at Header + Parameter and set our return value to it
-    Set Data = sheet.Cells(row + header.row - 1, column + header.column - 1)
+    Set Data = sheet.Cells(row + header.row, column + header.column - 1)
+End Function
+
+'/*
+'
+' This function gets a range of cells BELOW the header.
+' -- For example, if our header begins at A1, then:
+' -- Data_Range(1, 1, 5) would return Range(A2:E2)
+'*/
+Public Function Data_Range( column As Long, row As Long, width As Integer ) As Range
+    ' Find the first cell of our data
+    Dim start_cell As Range: Set start_cell = Data(column, row)
+    ' Find the last cell of our data, based on the first cell
+    Dim end_cell As Range: Set end_cell = start_cell.Offset(, width)
+    ' Return a new range of data from start to end
+    Set Data_Range = sheet.Range(start_cell, end_cell)
+End Function
+
+'/*
+'
+' This function gets a range of cells representing a particular row BELOW the header
+' -- For example, if our header begins at A1, and is in its initial state then:
+' ---- Data_Row(1) would return Range(A2:E2)
+
+' -- If our header begins at A1, and is in its report state, then:
+' ---- Data(Row(1) would return Range(A2:H2)
+'*/
+Public Function Data_Row( row As Long ) As Range
+    ' Get the column data
+    Dim data As Scripting.Dictionary: Set data = column_data
+    ' Determine the width of the header
+    Dim width As Integer: width = data.count
+    ' Outsource the work to Data_Range. Column is 1 (start), width goes to end.
+    Set Data_Row = Data_Range( 1, row, width )
+End Function
+
+'/*
+'
+' This function returns an entire column below the header
+' -- For example, if our header begins at A1, then:
+' ---- Data_Row(1) would return Range(A2:A) ending at the last non-empty row
+'
+'*/
+Public Function Data_Column( column As Long ) As Range
+    ' TODO:
+    Err.Raise Number:=vbObjectError + 513, Description:="Not yet implemented"
+    'Set Data_Column = Range("A1")
 End Function
 
 '
@@ -184,7 +262,7 @@ Public Function find_header(Optional recreated As Boolean = False) As Range
 
             If recreated = False Then
                 ' -- try to reset the page
-                Transform.Recreate_Page
+                ' Transform.Recreate_Page sheet
 
                 ' Try running it again
                 ' -- True is important here. It tells us that we ran the recreate function already.
@@ -248,21 +326,18 @@ End Function
 ' -- the method out in the future.
 '
 Public Function last_row() As Long
-    ' This is one approach. However, it counts blanks and if the macro is called multiple times, the number of rows it duplicates doubles each time, eventually locking the sheet.
+    ' This is one approach. However, it counts blanks and if the macro is called multiple times, 
+    ' -- the number of rows it duplicates doubles each time, eventually locking the sheet.
     ' last_row = ActiveSheet.UsedRange.Row - 1 + ActiveSheet.UsedRange.Rows.count
 
-    ' The next approach depends on a column we know will always have data in it. We will use "first name"
-    Dim column As Integer
-    If isInitial() Then
-        ' In the initial state, the "First name" column is 4 (1+3 = 4)
-        column = header.column + 3
-    Else
-        ' In the "report" state, the "first name" column is 7 (1+6 = 7)
-        column = header.column + 6
-    End If
-
-    ' Use this approach for now. It finds the last cell in column 7 or 4 (first name) with data, and counts to that.
-    last_row = sheet.Cells(Rows.count, column).End(xlUp).row
+    ' Find the last row which has a cell with any data in it
+    last_row = sheet.Cells.Find(What:="*", _
+                    After:=header, _
+                    LookAt:=xlPart, _
+                    LookIn:=xlFormulas, _
+                    SearchOrder:=xlByRows, _
+                    SearchDirection:=xlPrevious, _
+                    MatchCase:=False).Row
 End Function
 
 '/*
@@ -290,8 +365,8 @@ End Function
 '
 '*/
 Public Function Full_Range() As Range
-    ' Get the range from the header (1,1) to the last column and last row (8,last_row())
-    Set Full_Range = sheet.Range(Data(1, 1), Data(last_column(), last_row()))
+    ' Get the range from the header (1,0) to the last column and last row (8,last_row())
+    Set Full_Range = sheet.Range(Data(1, 0), Data(last_column(), last_row()))
 End Function
 
 '
@@ -301,7 +376,7 @@ End Function
 Public Function isInitial() As Boolean
     
     ' If the first cell of the header is our initial value, then assume the rest of the sheet is in its initial state
-    If Data(1, 1).value = "NYSLRS ID" Then
+    If Data(1, 0).value = "NYSLRS ID" Then
         ' Return True when this function ends
         isInitial = True
     Else
@@ -316,7 +391,7 @@ End Function
 '
 Public Function isReport() As Boolean
     ' If the first cell of the header is in our "report" state, then assume the rest of the sheet is in the same state too
-    If Data(1, 1).value = "Transaction" Then
+    If Data(1, 0).value = "Transaction" Then
         ' Return True when this function ends
         isReport = True
     Else

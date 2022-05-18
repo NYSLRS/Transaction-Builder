@@ -9,7 +9,6 @@ Option Private Module
 Private Assert As Object
 Private Fakes As Object
 Private Transform As Transform
-Private Transform As Transform
 
 '@ModuleInitialize
 Private Sub ModuleInitialize()
